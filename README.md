@@ -1,9 +1,7 @@
 # Piaf Inbox
 
-Messagerie personnelle utilisant GitHub Pages et les fonctions Supabase. Le site demande une authentification ; les messages et mots de passe ne sont jamais publiés dans ce dépôt.
+Interface personnelle hébergée sur GitHub Pages, avec une fonction Supabase protégée par connexion et par identifiant utilisateur. Les identifiants de messagerie restent dans les secrets Supabase.
 
-Le serveur vérifie l'identité auprès de Supabase et n'autorise que l'identifiant utilisateur configuré dans `OWNER_USER_ID`. Les identifiants des boîtes restent dans les secrets Supabase. La clé Supabase présente dans le code est la clé publique du projet.
+La version actuelle gère Yahoo : consultation des dossiers, recherche dans le dossier affiché, pagination, favoris dans la boîte de réception, statut lu/non lu, déplacement dans la corbeille et archives lorsque le serveur les expose, rédaction, réponse, transfert, Cc/Cci et pièces jointes. Les résultats non lus sont filtrés parmi les messages chargés. Les pièces jointes sont limitées à 4 Mo à l'envoi et 8 Mo au téléchargement. Les messages sont affichés sous forme de texte pour éviter le contenu actif. Le transfert ne joint pas automatiquement les fichiers originaux.
 
-Les dossiers sont lus via IMAP, les fichiers joints sont téléchargeables et l'envoi peut inclure 4 Mo de fichiers au total. Les messages sont affichés en texte brut. L'application affiche les 50 derniers messages du dossier sélectionné. L'enregistrement d'une copie dans Envoyés peut échouer après l'envoi ; le site le signale. La compatibilité des serveurs, y compris les pièces jointes et SMTP, doit être testée avec les comptes réels.
-
-Code serveur : `supabase/functions/mail/index.ts` dans l'archive du projet. Avant de relier la boîte professionnelle, vérifier les règles de l'académie et la région de traitement Supabase.
+L'onglet Brouillons affiche les brouillons existants mais l'enregistrement et la modification des brouillons ne sont pas encore disponibles. L'académie de Versailles reste en attente. Il reste à tester les opérations avec le compte réel, notamment l'envoi, les fichiers joints, la recherche et le classement.
