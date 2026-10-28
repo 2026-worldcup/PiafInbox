@@ -1,5 +1,6 @@
 import { ImapFlow } from 'npm:imapflow@2.9.1';
 import { simpleParser } from 'npm:mailparser@3.12.4';
+import { convert } from 'npm:html-to-text@10.0.1';
 import nodemailer from 'npm:nodemailer@10.2.1';
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 const env=(k:string)=>Deno.env.get(k)||'';
@@ -42,7 +43,7 @@ Deno.serve(async(req:Request)=>{
    try{
     const uid=u.searchParams.get('uid');
     if(uid){if(!/^\d+$/.test(uid))return out({error:'Message invalide.'},400);const msg=await client.fetchOne(uid,{source:true},{uid:true});if(!msg)return out({error:'Message introuvable.'},404);if(msg.source.length>12000000)return out({error:'Message trop volumineux.'},413);const parsed=await simpleParser(msg.source);const idx=u.searchParams.get('attachment');if(idx!==null){if(!/^\d+$/.test(idx)||!parsed.attachments[+idx])return out({error:'Pièce jointe introuvable.'},404);const f=parsed.attachments[+idx];if(f.content.length>8000000)return out({error:'Pièce jointe trop volumineuse.'},413);return new Response(f.content,{headers:{...cors,'Content-Type':'application/octet-stream','Content-Disposition':`attachment; filename="piece-jointe"`}})}
-     return out({subject:parsed.subject||'(Sans objet)',from:parsed.from?.text||'',replyTo:parsed.replyTo?.value?.[0]?.address||parsed.from?.value?.[0]?.address||'',date:parsed.date,text:parsed.text||'Ce message ne contient pas de texte brut.',messageId:parsed.messageId||'',attachments:parsed.attachments.map((x,i)=>({name:x.filename||'Pièce jointe',index:i,size:x.size}))});}
+     return out({subject:parsed.subject||'(Sans objet)',from:parsed.from?.text||'',replyTo:parsed.replyTo?.value?.[0]?.address||parsed.from?.value?.[0]?.address||'',date:parsed.date,text:parsed.text||(parsed.html?convert(parsed.html,{wordwrap:100}):'Ce message ne contient pas de texte lisible.'),messageId:parsed.messageId||'',attachments:parsed.attachments.map((x,i)=>({name:x.filename||'Pièce jointe',index:i,size:x.size}))});}
     const total=client.mailbox?.exists||0;if(!total)return out({messages:[]});const messages=[];for await(const m of client.fetch(`${Math.max(1,total-49)}:${total}`,{uid:true,envelope:true,flags:true}))messages.push({uid:m.uid,subject:m.envelope?.subject||'(Sans objet)',from:m.envelope?.from?.map(x=>x.name||x.address).join(', ')||'',date:m.envelope?.date,unread:!m.flags?.has('\\Seen')});return out({messages:messages.reverse()});
    }finally{lock.release()}
   }finally{await client.logout().catch(()=>client.close())}
