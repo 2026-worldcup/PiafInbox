@@ -6,11 +6,12 @@ import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 const env=(k:string)=>Deno.env.get(k)||'';
 const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'GET, POST, PATCH, OPTIONS','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 const out=(value:unknown,status=200)=>Response.json(value,{status,headers:cors});
+function accounts(){
+ const result=[];for(let i=1;i<=5;i++){const address=env(`YAHOO_${i}_ADDRESS`),pass=env(`YAHOO_${i}_PASSWORD`);if(address&&pass)result.push({id:`yahoo-${i}`,address});}return result;
+}
 function account(name:string|null){
- if(!['yahoo','versailles'].includes(name||''))throw Error('Invalid account'); const p=name!.toUpperCase();
- const user=env(p+'_USER'),pass=env(p+'_PASSWORD'),address=env(p+'_ADDRESS');if(!user||!pass||!address)throw Error('Missing credentials');
- const port=Number(env(p+'_SMTP_PORT')||465);if(![465,587].includes(port))throw Error('Invalid port');
- return {user,pass,address,imap:name==='yahoo'?'imap.mail.yahoo.com':'messagerie.ac-versailles.fr',smtp:name==='yahoo'?'smtp.mail.yahoo.com':'messagerie.ac-versailles.fr',port};
+ if(!name||!/^yahoo-[1-5]$/.test(name))throw Error('Invalid account');const i=name.slice(6),address=env(`YAHOO_${i}_ADDRESS`),pass=env(`YAHOO_${i}_PASSWORD`);if(!address||!pass)throw Error('Missing credentials');
+ return {user:address,pass,address,imap:'imap.mail.yahoo.com',smtp:'smtp.mail.yahoo.com',port:465};
 }
 Deno.serve(async(req:Request)=>{
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
@@ -20,7 +21,7 @@ Deno.serve(async(req:Request)=>{
   if(!token)return out({error:'Connexion requise.'},401);
   const auth=createClient(env('SUPABASE_URL'),env('SUPABASE_ANON_KEY'),{auth:{persistSession:false,autoRefreshToken:false}});
   const {data,error}=await auth.auth.getUser(token);if(error||data.user?.id!==owner)return out({error:'Accès refusé.'},403);
-  const u=new URL(req.url), a=account(u.searchParams.get('account'));
+  const u=new URL(req.url);if(req.method==='GET'&&u.searchParams.get('action')==='accounts')return out({accounts:accounts()});const a=account(u.searchParams.get('account')); 
   const client=new ImapFlow({host:a.imap,port:993,secure:true,auth:{user:a.user,pass:a.pass},logger:false,connectionTimeout:10000,socketTimeout:20000});
   await client.connect();
   try{
