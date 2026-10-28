@@ -4,7 +4,7 @@ import { convert } from 'npm:html-to-text@10.0.1';
 import nodemailer from 'npm:nodemailer@10.2.1';
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 const env=(k:string)=>Deno.env.get(k)||'';
-const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'GET, POST, PATCH, OPTIONS','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
+const cors={'Access-Control-Allow-Origin':'https://2026-worldcup.github.io','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'GET, POST, PATCH, OPTIONS','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
 const out=(value:unknown,status=200)=>Response.json(value,{status,headers:cors});
 function accounts(){
  const result=[];for(let i=1;i<=5;i++){const address=env(`YAHOO_${i}_ADDRESS`),pass=env(`YAHOO_${i}_PASSWORD`);if(address&&pass)result.push({id:`yahoo-${i}`,address});}return result;
